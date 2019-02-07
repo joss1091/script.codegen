@@ -1,14 +1,20 @@
 import xbmcaddon
 import xbmcgui
 import requests
+import xbmc
+import fcntl, socket, struct
 
 addon       = xbmcaddon.Addon()
 addonname   = addon.getAddonInfo('name')
+mac_address = getHwAddr('eth0')
+url = "http://192.168.50.119:8000/iptv/generate_alias?mac_address={}".format(mac_address)
 
-line1 = "Hello World!"
-line2 = "We can write anything we want here"
-line3 = "Using Python"
-url = "https://jsonplaceholder.typicode.com/todos/1"
-r = requests.get(url)
-r.json()
-xbmcgui.Dialog().ok(addonname, line1, line2, line3)
+def getHwAddr(ifname):
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    info = fcntl.ioctl(s.fileno(), 0x8927,  struct.pack('256s',ifname[:15]))
+    return ':'.join(['%02x' % ord(char) for char in info[18:24]])
+
+
+
+response = requests.get(url).json()
+xbmcgui.Dialog().ok(addonname, response['message'], '',response['number'])
